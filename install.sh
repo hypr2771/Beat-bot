@@ -1,3 +1,5 @@
+git checkout main
+git pull
 mvn clean package
 cd target
 chmod a+x beat-*.jar
