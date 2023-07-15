@@ -24,9 +24,10 @@ public class GuildAudioLoadResultHandler implements AudioLoadResultHandler {
 
   @Override
   public void trackLoaded(AudioTrack track) {
-    replyHook.editOriginal("Adding to queue " + track.getInfo().title + " for " + event.getMember().getEffectiveName()).queue();
-
-    trackManager.queue(track, event.getMember().getVoiceState().getChannel());
+    trackManager.queue(track,
+                       event.getMember().getVoiceState().getChannel(),
+                       replyHook,
+                       event.getChannel());
   }
 
   @Override
@@ -39,7 +40,10 @@ public class GuildAudioLoadResultHandler implements AudioLoadResultHandler {
 
     replyHook.editOriginal("Adding to queue " + firstTrack.getInfo().title + " (first track of playlist " + playlist.getName() + ")").queue();
 
-    trackManager.queue(playlist.getSelectedTrack(), event.getMember().getVoiceState().getChannel());
+    trackManager.queue(playlist.getSelectedTrack(),
+                       event.getMember().getVoiceState().getChannel(),
+                       replyHook,
+                       event.getChannel());
   }
 
   @Override

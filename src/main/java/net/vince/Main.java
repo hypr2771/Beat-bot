@@ -43,7 +43,10 @@ public class Main {
         Commands.slash("play", "Search and play a track")
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
                 .setGuildOnly(true) // Ban command only works inside a guild
-                .addOption(OptionType.STRING, "track", "Track to search for and play", true) // required option of type user (target to ban)
+                .addOption(OptionType.STRING, "track", "Track to search for and play", true),
+        Commands.slash("clear", "Delete all bot messages")
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
+                .setGuildOnly(true) // Ban command only works inside a guild
     ).queue();
   }
 
