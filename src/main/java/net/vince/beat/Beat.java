@@ -38,20 +38,24 @@ public class Beat extends ListenerAdapter {
         guildTrackManagers.put(guild.getIdLong(), new TrackManager(audioManager, guild));
       }
 
-      if (commandId.equals("skip")) {
+      var trackManager = guildTrackManagers.get(guild.getIdLong());
 
-        guildTrackManagers.get(guild.getIdLong()).skip();
-        event.reply("Skipped").queue();
-
-      } else if (commandId.equals("stop")) {
-
-        guildTrackManagers.get(guild.getIdLong()).stop();
-        event.reply("Bye").queue();
-
-      } else if (commandId.equals("play")) {
-
-        audioManager.loadItem(event.getOption("track").getAsString(),
-                              new GuildAudioLoadResultHandler(event, guild, guildTrackManagers.get(guild.getIdLong())));
+      switch (commandId) {
+        case "skip" -> {
+          trackManager.skip();
+          event.reply("Skipped").queue();
+        }
+        case "stop" -> {
+          trackManager.stop();
+          event.reply("Bye").queue();
+        }
+        case "play" -> {
+          var track = event.getOption("track").getAsString();
+          event.reply("Searching " + track + "...")
+               .queue(hook -> audioManager.loadItem(track,
+                                                    new GuildAudioLoadResultHandler(event, guild, trackManager, hook)));
+        }
+        default -> event.reply("Unknown command " + commandId).queue();
       }
     }
 

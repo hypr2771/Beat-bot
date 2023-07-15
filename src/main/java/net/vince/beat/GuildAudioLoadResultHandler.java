@@ -6,22 +6,25 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.InteractionHook;
 
 public class GuildAudioLoadResultHandler implements AudioLoadResultHandler {
 
   private final SlashCommandInteractionEvent event;
   private final Guild                        guild;
   private final TrackManager                 trackManager;
+  private final InteractionHook              replyHook;
 
-  public GuildAudioLoadResultHandler(SlashCommandInteractionEvent event, Guild guild, TrackManager trackManager) {
+  public GuildAudioLoadResultHandler(SlashCommandInteractionEvent event, Guild guild, TrackManager trackManager, InteractionHook replyHook) {
     this.event        = event;
     this.guild        = guild;
     this.trackManager = trackManager;
+    this.replyHook    = replyHook;
   }
 
   @Override
   public void trackLoaded(AudioTrack track) {
-    event.reply("Adding to queue " + track.getInfo().title + " for " + event.getMember().getEffectiveName()).queue();
+    replyHook.editOriginal("Adding to queue " + track.getInfo().title + " for " + event.getMember().getEffectiveName()).queue();
 
     trackManager.queue(track, event.getMember().getVoiceState().getChannel());
   }
@@ -34,19 +37,19 @@ public class GuildAudioLoadResultHandler implements AudioLoadResultHandler {
       firstTrack = playlist.getTracks().get(0);
     }
 
-    event.reply("Adding to queue " + firstTrack.getInfo().title + " (first track of playlist " + playlist.getName() + ")").queue();
+    replyHook.editOriginal("Adding to queue " + firstTrack.getInfo().title + " (first track of playlist " + playlist.getName() + ")").queue();
 
     trackManager.queue(playlist.getSelectedTrack(), event.getMember().getVoiceState().getChannel());
   }
 
   @Override
   public void noMatches() {
-    event.reply("Nothing found by " + event.getOption("track").getAsString()).queue();
+    replyHook.editOriginal("Nothing found by " + event.getOption("track").getAsString()).queue();
   }
 
   @Override
   public void loadFailed(FriendlyException exception) {
-    event.reply("Could not play: " + exception.getMessage()).queue();
+    replyHook.editOriginal("Could not play: " + exception.getMessage()).queue();
   }
 }
 
