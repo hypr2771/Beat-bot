@@ -1,0 +1,14 @@
+[Unit]
+Description = Beat Discord music bot
+After = network-online.target
+
+[Service]
+ExecStart=/usr/bin/java -jar /home/pi/Workspace/Beat-bot/target/beat-1.0-SNAPSHOT.jar
+WorkingDirectory=/home/pi/Workspace/Beat-bot
+User=pi
+Restart=always
+StandardOutput=inherit
+StandardError=inherit
+
+[Install]
+WantedBy = multi-user.target
