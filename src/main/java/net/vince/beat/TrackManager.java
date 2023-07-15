@@ -66,6 +66,9 @@ public class TrackManager extends AudioEventAdapter {
 
   @Override
   public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
+
+    playlist.remove(track);
+
     if (!playlist.isEmpty()) {
       player.playTrack(playlist.element());
 
