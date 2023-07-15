@@ -3,9 +3,15 @@ package net.vince.beat;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URL;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpRequest.BodyPublishers;
+import java.net.http.HttpResponse.BodyHandlers;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
@@ -58,9 +64,61 @@ public class Beat extends ListenerAdapter {
         }
         case "play" -> {
           var track = event.getOption("track").getAsString();
+
           event.deferReply(true)
-               .queue(hook -> audioManager.loadItem(track,
-                                                    new GuildAudioLoadResultHandler(event, guild, trackManager, hook)));
+               .queue(hook -> {
+
+                 var isUri       = false;
+                 var actualTrack = track;
+
+                 try {
+                   new URL(actualTrack);
+                   isUri = true;
+                 } catch (Exception ignored) {
+                 }
+
+                 if (!isUri) {
+                   try {
+                     actualTrack = HttpClient.newHttpClient().send(
+                                                 HttpRequest.newBuilder(URI.create("https://www.youtube.com/youtubei/v1/search"))
+                                                            .POST(BodyPublishers.ofString("""
+                                                                                              {
+                                                                                                "context": {
+                                                                                                  "client": {
+                                                                                                    "clientName": "WEB",
+                                                                                                    "clientVersion": "2.20230714.00.00"
+                                                                                                  },
+                                                                                                  "user": {
+                                                                                                    "lockedSafetyMode": false
+                                                                                                  },
+                                                                                                  "request": {
+                                                                                                    "useSsl": true,
+                                                                                                    "internalExperimentFlags": [],
+                                                                                                    "consistencyTokenJars": []
+                                                                                                  }
+                                                                                                },
+                                                                                                "query": "{QUERY}",
+                                                                                              }
+                                                                                              """.replace("{QUERY}", track)))
+                                                            .build(),
+                                                 BodyHandlers.ofLines())
+                                             .body()
+                                             .filter(line -> line.contains("videoId"))
+                                             .map(videoIds -> videoIds.replaceAll(".+\"videoId\": \"(.+)\",", "$1"))
+                                             .findFirst()
+                                             .get();
+                   } catch (IOException e) {
+                     throw new RuntimeException(e);
+                   } catch (InterruptedException e) {
+                     throw new RuntimeException(e);
+                   }
+
+                   actualTrack = "https://www.youtube.com/watch?v=" + actualTrack;
+                 }
+
+                 audioManager.loadItem(actualTrack,
+                                       new GuildAudioLoadResultHandler(event, guild, trackManager, hook));
+               });
         }
         case "clear" -> {
           event.deferReply(true)
