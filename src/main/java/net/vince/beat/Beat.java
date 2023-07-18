@@ -10,19 +10,44 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import net.dv8tion.jda.api.events.GenericEvent;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.Command.Type;
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
+import net.dv8tion.jda.api.interactions.commands.build.Commands;
 
 public class Beat extends ListenerAdapter {
 
+  private static final List<CommandData> COMMANDS = new ArrayList<>(List.of(Commands.slash("stop", "Remove all tracks")
+                                                                                    .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
+                                                                                    .setGuildOnly(true),
+                                                                            Commands.slash("skip", "Skip current track")
+                                                                                    .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
+                                                                                    .setGuildOnly(true),
+                                                                            Commands.slash("play", "Search and play a track")
+                                                                                    .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
+                                                                                    .setGuildOnly(true)
+                                                                                    .addOption(OptionType.STRING, "track", "Track to search for and play", true),
+                                                                            Commands.slash("clear", "Delete all bot messages")
+                                                                                    .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
+                                                                                    .setGuildOnly(true)));
+
   private final AudioPlayerManager      audioManager;
   private final Map<Long, TrackManager> guildTrackManagers;
+
+  public static Collection<CommandData> getCommands() {
+    return new ArrayList<>(COMMANDS);
+  }
 
   public Beat() {
 
@@ -36,6 +61,11 @@ public class Beat extends ListenerAdapter {
 
   @Override
   public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
+
+    if (COMMANDS.stream().noneMatch(supportedCommand -> supportedCommand.getName().equals(event.getFullCommandName()))) {
+      System.out.println("Not a Beat command");
+      return;
+    }
 
     if (event.getCommandType() == Type.SLASH) {
 
@@ -160,11 +190,6 @@ public class Beat extends ListenerAdapter {
       default -> event.reply("Unknown command " + event.getButton().getId()).queue();
     }
 
-  }
-
-  @Override
-  public void onGenericEvent(GenericEvent event) {
-    System.out.println(event);
   }
 
 }
