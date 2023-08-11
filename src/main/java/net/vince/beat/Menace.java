@@ -73,7 +73,7 @@ public class Menace extends ListenerAdapter {
                    };
 
                    if (noInfo) {
-                     return hook.editOriginal("There is only 3 known servers. Either type IP:PORT of server or 1, 2, 3 for Menace's servers.");
+                     return hook.editOriginal("⛔️ There is only 3 known servers. Either type IP:PORT of server or 1, 2, 3 for Menace's servers.");
                    }
                  } else {
                    ipPorts = List.of(server);
@@ -86,7 +86,7 @@ public class Menace extends ListenerAdapter {
                  return hook.sendMessageEmbeds(messages);
                }).queue();
         }
-        default -> event.reply("Unknown command " + commandId).queue();
+        default -> event.reply("⁉️ Unknown command " + commandId).queue();
       }
     }
 
@@ -137,16 +137,22 @@ public class Menace extends ListenerAdapter {
       var connectedPlayers = info[5].isEmpty() ? (byte) 0 : (byte) info[5].charAt(0);
       var maxPlayers       = info[5].isEmpty() ? (byte) info[6].charAt(0) : (byte) info[5].charAt(1);
 
+      var isFull = connectedPlayers == maxPlayers;
+
       return new MessageEmbed(null,
                               name,
                               """
-                                  · Map: %s
-                                  · State: %s
-                                  · Players: %s/%s
-                                  """.formatted(map, state, connectedPlayers, maxPlayers),
+                                  · 🗾 Map: %s
+                                  · ℹ️ State: %s
+                                  · %s: %s/%s
+                                  """.formatted(map,
+                                                state,
+                                                isFull ? "⚠️ Players:" : "✅ Players:",
+                                                connectedPlayers,
+                                                maxPlayers),
                               EmbedType.RICH,
                               null,
-                              connectedPlayers == maxPlayers ? 0x2986cc : 0x5dd200,
+                              isFull ? 0x2986cc : 0x5dd200,
                               null,
                               null,
                               null,
@@ -159,7 +165,7 @@ public class Menace extends ListenerAdapter {
     } catch (IOException e) {
       return new MessageEmbed(null,
                               "Failure for %s".formatted(ipPort),
-                              "Server %s did not respond...".formatted(ipPort),
+                              "⛔️ Server %s did not respond...".formatted(ipPort),
                               EmbedType.RICH,
                               null,
                               0xff4040,
@@ -173,7 +179,7 @@ public class Menace extends ListenerAdapter {
     } catch (ArrayIndexOutOfBoundsException e) {
       return new MessageEmbed(null,
                               "Failure for %s".formatted(ipPort),
-                              "Server uses a different version of HLDS API...",
+                              "⛔️ Server uses a different version of HLDS API...",
                               EmbedType.RICH,
                               null,
                               0xff7f00,

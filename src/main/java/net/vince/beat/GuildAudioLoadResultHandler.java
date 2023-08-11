@@ -38,7 +38,7 @@ public class GuildAudioLoadResultHandler implements AudioLoadResultHandler {
       firstTrack = playlist.getTracks().get(0);
     }
 
-    replyHook.editOriginal("Adding to queue " + firstTrack.getInfo().title + " (first track of playlist " + playlist.getName() + ")").queue();
+    replyHook.editOriginal("✅ Adding to queue " + firstTrack.getInfo().title + " (first track of playlist " + playlist.getName() + ")").queue();
 
     trackManager.queue(playlist.getSelectedTrack(),
                        event.getMember().getVoiceState().getChannel(),
@@ -48,12 +48,12 @@ public class GuildAudioLoadResultHandler implements AudioLoadResultHandler {
 
   @Override
   public void noMatches() {
-    replyHook.editOriginal("Nothing found by " + event.getOption("track").getAsString()).queue();
+    replyHook.editOriginal("⚠️ Nothing found for " + event.getOption("track").getAsString()).queue();
   }
 
   @Override
   public void loadFailed(FriendlyException exception) {
-    replyHook.editOriginal("Could not play: " + exception.getMessage()).queue();
+    replyHook.editOriginal("⛔️ Could not play: " + exception.getMessage()).queue();
   }
 }
 

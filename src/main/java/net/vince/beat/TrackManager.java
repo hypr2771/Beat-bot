@@ -57,10 +57,44 @@ public class TrackManager extends AudioEventAdapter {
     replyHook.deleteOriginal()
              .flatMap(ignored -> currentMessage.map(message -> message.editMessageComponents(ActionRow.of(Button.secondary("skip", Emoji.fromUnicode("⏭")),
                                                                                                           Button.danger("stop", Emoji.fromUnicode("⏹"))))
-                                                                      .flatMap(edited -> edited.editMessageEmbeds(new MessageEmbed(null, "Playlist", this.playlist.stream().map(playlistTrack -> "· %s - %s - %s".formatted(playlistTrack.getInfo().title, playlistTrack.getInfo().author, Duration.ofMillis(playlistTrack.getInfo().length).toString())).collect(Collectors.joining("\n")), EmbedType.RICH, null, 0x00FFFF, null, null, null, null, null, null, null))))
+                                                                      .flatMap(edited -> edited.editMessageEmbeds(new MessageEmbed(null,
+                                                                                                                                   "Playlist",
+                                                                                                                                   this.playlist.stream()
+                                                                                                                                                .map(playlistTrack -> "· %s - %s - %s".formatted(playlistTrack.getInfo().title,
+                                                                                                                                                                                                 playlistTrack.getInfo().author,
+                                                                                                                                                                                                 Duration.ofMillis(playlistTrack.getInfo().length)
+                                                                                                                                                                                                         .toString()))
+                                                                                                                                                .collect(Collectors.joining("\n")),
+                                                                                                                                   EmbedType.RICH,
+                                                                                                                                   null,
+                                                                                                                                   0x5dd200,
+                                                                                                                                   null,
+                                                                                                                                   null,
+                                                                                                                                   null,
+                                                                                                                                   null,
+                                                                                                                                   null,
+                                                                                                                                   null,
+                                                                                                                                   null))))
                                                .orElseGet(() -> eventChannel.sendMessageComponents(ActionRow.of(Button.secondary("skip", Emoji.fromUnicode("⏭")),
                                                                                                                 Button.danger("stop", Emoji.fromUnicode("⏹"))))
-                                                                            .flatMap(message -> message.editMessageEmbeds(new MessageEmbed(null, "Playlist", this.playlist.stream().map(playlistTrack -> "· %s - %s - %s".formatted(playlistTrack.getInfo().title, playlistTrack.getInfo().author, Duration.ofMillis(playlistTrack.getInfo().length).toString())).collect(Collectors.joining("\n")), EmbedType.RICH, null, 0x00FFFF, null, null, null, null, null, null, null)))))
+                                                                            .flatMap(message -> message.editMessageEmbeds(new MessageEmbed(null,
+                                                                                                                                           "Playlist",
+                                                                                                                                           this.playlist.stream()
+                                                                                                                                                        .map(playlistTrack -> "· %s - %s - %s".formatted(playlistTrack.getInfo().title,
+                                                                                                                                                                                                         playlistTrack.getInfo().author,
+                                                                                                                                                                                                         Duration.ofMillis(playlistTrack.getInfo().length)
+                                                                                                                                                                                                                 .toString()))
+                                                                                                                                                        .collect(Collectors.joining("\n")),
+                                                                                                                                           EmbedType.RICH,
+                                                                                                                                           null,
+                                                                                                                                           0x5dd200,
+                                                                                                                                           null,
+                                                                                                                                           null,
+                                                                                                                                           null,
+                                                                                                                                           null,
+                                                                                                                                           null,
+                                                                                                                                           null,
+                                                                                                                                           null)))))
              .queue(message -> this.currentMessage = Optional.of(message));
   }
 
@@ -74,7 +108,23 @@ public class TrackManager extends AudioEventAdapter {
 
       currentMessage.map(message -> message.editMessageComponents(ActionRow.of(Button.secondary("skip", Emoji.fromUnicode("⏭")),
                                                                                Button.danger("stop", Emoji.fromUnicode("⏹"))))
-                                           .flatMap(edited -> edited.editMessageEmbeds(new MessageEmbed(null, "Playlist", this.playlist.stream().map(playlistTrack -> "· %s - %s - %s".formatted(playlistTrack.getInfo().title, playlistTrack.getInfo().author, Duration.ofMillis(playlistTrack.getInfo().length).toString())).collect(Collectors.joining("\n")), EmbedType.RICH, null, 0x00FFFF, null, null, null, null, null, null, null))))
+                                           .flatMap(edited -> edited.editMessageEmbeds(new MessageEmbed(null,
+                                                                                                        "Playlist",
+                                                                                                        this.playlist.stream()
+                                                                                                                     .map(playlistTrack -> "· %s - %s - %s".formatted(playlistTrack.getInfo().title,
+                                                                                                                                                                      playlistTrack.getInfo().author,
+                                                                                                                                                                      Duration.ofMillis(playlistTrack.getInfo().length).toString()))
+                                                                                                                     .collect(Collectors.joining("\n")),
+                                                                                                        EmbedType.RICH,
+                                                                                                        null,
+                                                                                                        0x5dd200,
+                                                                                                        null,
+                                                                                                        null,
+                                                                                                        null,
+                                                                                                        null,
+                                                                                                        null,
+                                                                                                        null,
+                                                                                                        null))))
                     .ifPresent(messageRestAction -> messageRestAction.queue(message -> this.currentMessage = Optional.of(message)));
     } else {
       currentMessage.map(Message::delete)
