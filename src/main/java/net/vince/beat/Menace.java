@@ -6,17 +6,27 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Deque;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.BinaryOperator;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collector;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.EmbedType;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.Command.Type;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
+import net.dv8tion.jda.api.requests.RestAction;
 import org.jetbrains.annotations.NotNull;
 
 public class Menace extends ListenerAdapter {
@@ -51,45 +61,81 @@ public class Menace extends ListenerAdapter {
         case "info" -> {
           var server = event.getOption("server").getAsString();
 
-          event.deferReply()
-               .flatMap(hook -> {
+          var isIpPort = server.matches("(\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}):(\\d{1,5})");
+          var ipPorts  = List.<String>of();
 
-                 var isIpPort = server.matches("(\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}):(\\d{1,5})");
-                 var ipPorts  = List.<String>of();
+          if (!isIpPort) {
 
-                 if (!isIpPort) {
+            var noInfo = false;
 
-                   var noInfo = false;
+            ipPorts = switch (server) {
+              case "1" -> IPS.subList(0, 1);
+              case "2" -> IPS.subList(1, 2);
+              case "3" -> IPS.subList(2, 3);
+              case "all" -> IPS;
+              default -> {
+                noInfo = true;
+                yield List.of();
+              }
+            };
 
-                   ipPorts = switch (server) {
-                     case "1" -> IPS.subList(0, 1);
-                     case "2" -> IPS.subList(1, 2);
-                     case "3" -> IPS.subList(2, 3);
-                     case "all" -> IPS;
-                     default -> {
-                       noInfo = true;
-                       yield List.of();
-                     }
-                   };
+            if (noInfo) {
+              event.reply("⛔️ There is only 3 known servers. Either type IP:PORT of server or 1, 2, 3 for Menace's servers.").queue();
+            }
+          } else {
+            ipPorts = List.of(server);
+          }
 
-                   if (noInfo) {
-                     return hook.editOriginal("⛔️ There is only 3 known servers. Either type IP:PORT of server or 1, 2, 3 for Menace's servers.");
-                   }
-                 } else {
-                   ipPorts = List.of(server);
-                 }
+          event.deferReply().queue();
 
-                 var messages = ipPorts.parallelStream()
-                                       .map(this::createMessage)
-                                       .toList();
-
-                 return hook.sendMessageEmbeds(messages);
-               }).queue();
+          ipPorts.parallelStream()
+                 .map(this::createMessage)
+                 .collect(messagesToRestAction(event))
+                 .queue();
         }
         default -> event.reply("⁉️ Unknown command " + commandId).queue();
       }
     }
 
+  }
+
+  @NotNull
+  private Collector<MessageEmbed, Deque<RestAction<?>>, RestAction<?>> messagesToRestAction(final SlashCommandInteractionEvent event) {
+    return new Collector<>() {
+
+      final InteractionHook hook = event.getInteraction().getHook();
+      final List<MessageEmbed> embeds = new ArrayList<>();
+
+      @Override
+      public Supplier<Deque<RestAction<?>>> supplier() {
+        return LinkedList::new;
+      }
+
+      @Override
+      public BiConsumer<Deque<RestAction<?>>, MessageEmbed> accumulator() {
+        return (restActions, messageEmbed) -> {
+          embeds.add(messageEmbed);
+          restActions.offer(restActions.isEmpty() ?
+                            hook.editOriginalEmbeds(embeds) :
+                            restActions.peekLast().and(hook.editOriginalEmbeds(embeds)));
+        };
+      }
+
+      @Override
+      public BinaryOperator<Deque<RestAction<?>>> combiner() {
+        return (restActions, restActions2) -> restActions2;
+      }
+
+      @Override
+      public Function<Deque<RestAction<?>>, RestAction<?>> finisher() {
+        return Deque::peekLast;
+      }
+
+      @Override
+      public Set<Characteristics> characteristics() {
+        return Set.of();
+      }
+    };
   }
 
   @NotNull
@@ -139,7 +185,7 @@ public class Menace extends ListenerAdapter {
 
       var isFull = connectedPlayers == maxPlayers;
 
-      return new MessageEmbed(null,
+      return new MessageEmbed("https://connectsteam.me/?%s:%s".formatted(ip, port),
                               name,
                               """
                                   · 🗾 Map: %s
@@ -147,9 +193,7 @@ public class Menace extends ListenerAdapter {
                                   · %s: %s/%s
                                   """.formatted(map,
                                                 state,
-                                                isFull ? "⚠️ Players:" : "✅ Players:",
-                                                connectedPlayers,
-                                                maxPlayers),
+                                                isFull ? "⚠️ Players:" : "✅ Players:", connectedPlayers, maxPlayers),
                               EmbedType.RICH,
                               null,
                               isFull ? 0x2986cc : 0x5dd200,
