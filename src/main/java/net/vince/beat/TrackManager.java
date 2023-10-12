@@ -22,6 +22,7 @@ import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.vince.beat.mixin.AudioPlayerSendHandler;
+import org.jetbrains.annotations.NotNull;
 
 public class TrackManager extends AudioEventAdapter {
 
@@ -30,6 +31,8 @@ public class TrackManager extends AudioEventAdapter {
   private final Deque<AudioTrack> playlist;
 
   private Optional<Message> currentMessage;
+
+  private boolean loop = false;
 
   public TrackManager(AudioPlayerManager audioManager, Guild guild) {
 
@@ -55,76 +58,27 @@ public class TrackManager extends AudioEventAdapter {
     }
 
     replyHook.deleteOriginal()
-             .flatMap(ignored -> currentMessage.map(message -> message.editMessageComponents(ActionRow.of(Button.secondary("skip", Emoji.fromUnicode("⏭")),
-                                                                                                          Button.danger("stop", Emoji.fromUnicode("⏹"))))
-                                                                      .flatMap(edited -> edited.editMessageEmbeds(new MessageEmbed(null,
-                                                                                                                                   "Playlist",
-                                                                                                                                   this.playlist.stream()
-                                                                                                                                                .map(playlistTrack -> "· %s - %s - %s".formatted(playlistTrack.getInfo().title,
-                                                                                                                                                                                                 playlistTrack.getInfo().author,
-                                                                                                                                                                                                 Duration.ofMillis(playlistTrack.getInfo().length)
-                                                                                                                                                                                                         .toString()))
-                                                                                                                                                .collect(Collectors.joining("\n")),
-                                                                                                                                   EmbedType.RICH,
-                                                                                                                                   null,
-                                                                                                                                   0x5dd200,
-                                                                                                                                   null,
-                                                                                                                                   null,
-                                                                                                                                   null,
-                                                                                                                                   null,
-                                                                                                                                   null,
-                                                                                                                                   null,
-                                                                                                                                   null))))
-                                               .orElseGet(() -> eventChannel.sendMessageComponents(ActionRow.of(Button.secondary("skip", Emoji.fromUnicode("⏭")),
-                                                                                                                Button.danger("stop", Emoji.fromUnicode("⏹"))))
-                                                                            .flatMap(message -> message.editMessageEmbeds(new MessageEmbed(null,
-                                                                                                                                           "Playlist",
-                                                                                                                                           this.playlist.stream()
-                                                                                                                                                        .map(playlistTrack -> "· %s - %s - %s".formatted(playlistTrack.getInfo().title,
-                                                                                                                                                                                                         playlistTrack.getInfo().author,
-                                                                                                                                                                                                         Duration.ofMillis(playlistTrack.getInfo().length)
-                                                                                                                                                                                                                 .toString()))
-                                                                                                                                                        .collect(Collectors.joining("\n")),
-                                                                                                                                           EmbedType.RICH,
-                                                                                                                                           null,
-                                                                                                                                           0x5dd200,
-                                                                                                                                           null,
-                                                                                                                                           null,
-                                                                                                                                           null,
-                                                                                                                                           null,
-                                                                                                                                           null,
-                                                                                                                                           null,
-                                                                                                                                           null)))))
+             .flatMap(ignored -> currentMessage.map(message -> message.editMessageComponents(getItemComponents())
+                                                                      .flatMap(edited -> edited.editMessageEmbeds(getMessageEmbed())))
+                                               .orElseGet(() -> eventChannel.sendMessageComponents(getItemComponents())
+                                                                            .flatMap(message -> message.editMessageEmbeds(getMessageEmbed()))))
              .queue(message -> this.currentMessage = Optional.of(message));
   }
 
   @Override
   public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
 
+    if (this.loop) {
+      playlist.offerFirst(track.makeClone());
+    }
+
     playlist.remove(track);
 
     if (!playlist.isEmpty()) {
       player.playTrack(playlist.element());
 
-      currentMessage.map(message -> message.editMessageComponents(ActionRow.of(Button.secondary("skip", Emoji.fromUnicode("⏭")),
-                                                                               Button.danger("stop", Emoji.fromUnicode("⏹"))))
-                                           .flatMap(edited -> edited.editMessageEmbeds(new MessageEmbed(null,
-                                                                                                        "Playlist",
-                                                                                                        this.playlist.stream()
-                                                                                                                     .map(playlistTrack -> "· %s - %s - %s".formatted(playlistTrack.getInfo().title,
-                                                                                                                                                                      playlistTrack.getInfo().author,
-                                                                                                                                                                      Duration.ofMillis(playlistTrack.getInfo().length).toString()))
-                                                                                                                     .collect(Collectors.joining("\n")),
-                                                                                                        EmbedType.RICH,
-                                                                                                        null,
-                                                                                                        0x5dd200,
-                                                                                                        null,
-                                                                                                        null,
-                                                                                                        null,
-                                                                                                        null,
-                                                                                                        null,
-                                                                                                        null,
-                                                                                                        null))))
+      currentMessage.map(message -> message.editMessageComponents(getItemComponents())
+                                           .flatMap(edited -> edited.editMessageEmbeds(getMessageEmbed())))
                     .ifPresent(messageRestAction -> messageRestAction.queue(message -> this.currentMessage = Optional.of(message)));
     } else {
       currentMessage.map(Message::delete)
@@ -132,6 +86,38 @@ public class TrackManager extends AudioEventAdapter {
       currentMessage = Optional.empty();
       guild.getAudioManager().closeAudioConnection();
     }
+  }
+
+  @NotNull
+  private ActionRow getItemComponents() {
+    return ActionRow.of(Button.secondary("skip", Emoji.fromUnicode("⏭")),
+                        Button.danger("stop", Emoji.fromUnicode("⏹")),
+                        this.loop ?
+                        Button.primary("loop",
+                                       Emoji.fromUnicode("\uD83D\uDD01")) :
+                        Button.secondary("loop",
+                                         Emoji.fromUnicode("\uD83D\uDD01")));
+  }
+
+  @NotNull
+  private MessageEmbed getMessageEmbed() {
+    return new MessageEmbed(null,
+                            "Playlist",
+                            this.playlist.stream()
+                                         .map(playlistTrack -> "· %s - %s - %s".formatted(playlistTrack.getInfo().title,
+                                                                                          playlistTrack.getInfo().author,
+                                                                                          Duration.ofMillis(playlistTrack.getInfo().length).toString()))
+                                         .collect(Collectors.joining("\n")),
+                            EmbedType.RICH,
+                            null,
+                            0x5dd200,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null);
   }
 
   public void skip() {
@@ -142,5 +128,13 @@ public class TrackManager extends AudioEventAdapter {
   public void stop() {
     playlist.clear();
     player.stopTrack();
+  }
+
+  public void toggleLoop() {
+    this.loop = !this.loop;
+
+    currentMessage.map(message -> message.editMessageComponents(getItemComponents())
+                                         .flatMap(edited -> edited.editMessageEmbeds(getMessageEmbed())))
+                  .ifPresent(messageRestAction -> messageRestAction.queue(message -> this.currentMessage = Optional.of(message)));
   }
 }

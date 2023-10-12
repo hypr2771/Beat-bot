@@ -34,6 +34,9 @@ public class Beat extends ListenerAdapter {
                                                                             Commands.slash("skip", "Skip current track")
                                                                                     .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
                                                                                     .setGuildOnly(true),
+                                                                            Commands.slash("loop", "Loop current track")
+                                                                                    .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
+                                                                                    .setGuildOnly(true),
                                                                             Commands.slash("play", "Search and play a track")
                                                                                     .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
                                                                                     .setGuildOnly(true)
@@ -88,6 +91,12 @@ public class Beat extends ListenerAdapter {
         }
         case "stop" -> {
           trackManager.stop();
+          event.deferReply(true)
+               .flatMap(InteractionHook::deleteOriginal)
+               .queue();
+        }
+        case "loop" -> {
+          trackManager.toggleLoop();
           event.deferReply(true)
                .flatMap(InteractionHook::deleteOriginal)
                .queue();
@@ -183,6 +192,12 @@ public class Beat extends ListenerAdapter {
       }
       case "stop" -> {
         trackManager.stop();
+        event.deferReply(true)
+             .flatMap(InteractionHook::deleteOriginal)
+             .queue();
+      }
+      case "loop" -> {
+        trackManager.toggleLoop();
         event.deferReply(true)
              .flatMap(InteractionHook::deleteOriginal)
              .queue();
