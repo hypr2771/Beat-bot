@@ -93,7 +93,7 @@ public class TrackManager extends AudioEventAdapter {
     return ActionRow.of(Button.secondary("skip", Emoji.fromUnicode("⏭")),
                         Button.danger("stop", Emoji.fromUnicode("⏹")),
                         this.loop ?
-                        Button.primary("loop",
+                        Button.success("loop",
                                        Emoji.fromUnicode("\uD83D\uDD01")) :
                         Button.secondary("loop",
                                          Emoji.fromUnicode("\uD83D\uDD01")));
