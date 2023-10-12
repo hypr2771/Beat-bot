@@ -32,7 +32,8 @@ public class TrackManager extends AudioEventAdapter {
 
   private Optional<Message> currentMessage;
 
-  private boolean loop = false;
+  private boolean loop     = false;
+  private boolean stopping = false;
 
   public TrackManager(AudioPlayerManager audioManager, Guild guild) {
 
@@ -68,7 +69,7 @@ public class TrackManager extends AudioEventAdapter {
   @Override
   public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
 
-    if (this.loop) {
+    if (this.loop && !this.stopping) {
       playlist.offerFirst(track.makeClone());
     }
 
@@ -127,7 +128,13 @@ public class TrackManager extends AudioEventAdapter {
 
   public void stop() {
     playlist.clear();
+
+    this.stopping = true;
+
     player.stopTrack();
+
+    this.stopping = false;
+    this.loop = false;
   }
 
   public void toggleLoop() {
