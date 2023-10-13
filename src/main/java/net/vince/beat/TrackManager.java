@@ -150,17 +150,25 @@ public class TrackManager extends AudioEventAdapter {
     var string = new StringBuilder();
 
     for (int i = 0; i < this.playlist.size(); i++) {
-      string.append("%s%s %s. %s - %s - %s%s\n".formatted(styleForIndex(i),
+      string.append("%s%s %s. %s - %s - %s%s%n".formatted(styleForIndex(i),
                                                           i == this.currentTrack ? "▸" : "·",
                                                           i + 1,
                                                           this.playlist.get(i).getInfo().title,
                                                           this.playlist.get(i).getInfo().author,
-                                                          Duration.ofMillis(this.playlist.get(i).getInfo().length).toString(),
+                                                          humanReadableFormat(Duration.ofMillis(this.playlist.get(i).getInfo().length)),
                                                           styleForIndex(i)));
     }
 
     return string.toString();
   }
+
+  public static String humanReadableFormat(Duration duration) {
+    return duration.toString()
+                   .substring(2)
+                   .replaceAll("(\\d[HMS])(?!$)", "$1 ")
+                   .toLowerCase();
+  }
+
 
   private String styleForIndex(int index) {
     if (this.currentTrack < index) {
