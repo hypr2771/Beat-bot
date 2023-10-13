@@ -6,10 +6,9 @@ import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import java.time.Duration;
-import java.util.Deque;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.stream.Collectors;
 import net.dv8tion.jda.api.entities.EmbedType;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
@@ -24,13 +23,27 @@ import net.dv8tion.jda.api.requests.RestAction;
 import net.vince.beat.mixin.AudioPlayerSendHandler;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * Good test string: /play track:https://www.youtube.com/watch?v=FNMsx6SmtyA
+ *
+ * ex.:
+ *
+ * 0. Metronomy - Reservoir 1. เมืองแมน - สัตว์สังคม 2. Pyre Original Soundtrack - Full Album
+ *
+ * Upon start, current track is 0.
+ *
+ * Loop: Clicking on loop makes the current track stack anew in the list. This does mean the index should not change, while track at index should be cloned.
+ */
 public class TrackManager extends AudioEventAdapter {
 
-  private final AudioPlayer       player;
-  private final Guild             guild;
-  private final Deque<AudioTrack> playlist;
+  private final AudioPlayer player;
+  private final Guild       guild;
+
+  private List<AudioTrack> playlist;
 
   private Optional<Message> currentMessage;
+
+  private int currentTrack = 0;
 
   private boolean loop     = false;
   private boolean stopping = false;
@@ -42,20 +55,29 @@ public class TrackManager extends AudioEventAdapter {
 
     guild.getAudioManager().setSendingHandler(new AudioPlayerSendHandler(newPlayer));
 
-    this.player         = newPlayer;
-    this.guild          = guild;
-    this.playlist       = new ConcurrentLinkedDeque<>();
+    this.player = newPlayer;
+    this.guild  = guild;
+
+    initialState();
+  }
+
+  private void initialState() {
     this.currentMessage = Optional.empty();
+    this.playlist       = new ArrayList<>();
+    this.stopping       = false;
+    this.loop           = false;
+    this.currentTrack   = 0;
   }
 
   public void queue(AudioTrack track, AudioChannelUnion channel, InteractionHook replyHook, MessageChannelUnion eventChannel) {
 
     guild.getAudioManager().openAudioConnection(channel);
 
-    playlist.offer(track);
+    playlist.add(track);
 
     if (player.getPlayingTrack() == null) {
-      player.playTrack(playlist.element());
+      this.currentTrack = 0;
+      player.playTrack(playlist.get(currentTrack));
     }
 
     replyHook.deleteOriginal()
@@ -69,14 +91,19 @@ public class TrackManager extends AudioEventAdapter {
   @Override
   public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
 
-    if (this.loop && !this.stopping) {
-      playlist.offerFirst(track.makeClone());
+    if (this.loop &&
+        !this.stopping &&
+        currentTrack >= 0) {
+      playlist.add(currentTrack, this.playlist.get(currentTrack).makeClone());
+      playlist.remove(currentTrack + 1);
+    } else if (this.currentTrack >= this.playlist.size() - 1) {
+      playlist.clear();
+    } else {
+      this.currentTrack++;
     }
 
-    playlist.remove(track);
-
     if (!playlist.isEmpty()) {
-      player.playTrack(playlist.element());
+      player.playTrack(playlist.get(currentTrack));
 
       currentMessage.map(message -> message.editMessageComponents(getItemComponents())
                                            .flatMap(edited -> edited.editMessageEmbeds(getMessageEmbed())))
@@ -91,8 +118,9 @@ public class TrackManager extends AudioEventAdapter {
 
   @NotNull
   private ActionRow getItemComponents() {
-    return ActionRow.of(Button.secondary("skip", Emoji.fromUnicode("⏭")),
+    return ActionRow.of(Button.secondary("previous", Emoji.fromUnicode("⏮")),
                         Button.danger("stop", Emoji.fromUnicode("⏹")),
+                        Button.secondary("next", Emoji.fromUnicode("⏭")),
                         this.loop ?
                         Button.success("loop",
                                        Emoji.fromUnicode("\uD83D\uDD01")) :
@@ -104,11 +132,7 @@ public class TrackManager extends AudioEventAdapter {
   private MessageEmbed getMessageEmbed() {
     return new MessageEmbed(null,
                             "Playlist",
-                            this.playlist.stream()
-                                         .map(playlistTrack -> "· %s - %s - %s".formatted(playlistTrack.getInfo().title,
-                                                                                          playlistTrack.getInfo().author,
-                                                                                          Duration.ofMillis(playlistTrack.getInfo().length).toString()))
-                                         .collect(Collectors.joining("\n")),
+                            getPlaylistString(),
                             EmbedType.RICH,
                             null,
                             0x5dd200,
@@ -121,20 +145,72 @@ public class TrackManager extends AudioEventAdapter {
                             null);
   }
 
-  public void skip() {
-    playlist.remove();
+  private String getPlaylistString() {
+
+    var string = new StringBuilder();
+
+    for (int i = 0; i < this.playlist.size(); i++) {
+      string.append("%s%s %s. %s - %s - %s%s\n".formatted(styleForIndex(i),
+                                                          i == this.currentTrack ? "▸" : "·",
+                                                          i + 1,
+                                                          this.playlist.get(i).getInfo().title,
+                                                          this.playlist.get(i).getInfo().author,
+                                                          Duration.ofMillis(this.playlist.get(i).getInfo().length).toString(),
+                                                          styleForIndex(i)));
+    }
+
+    return string.toString();
+  }
+
+  private String styleForIndex(int index) {
+    if (this.currentTrack < index) {
+      return "*";
+    }
+    if (this.currentTrack == index) {
+      return "**";
+    }
+    return "~~";
+  }
+
+  public void next() {
+    player.stopTrack();
+  }
+
+  public void previous() {
+
+    if (this.currentTrack == 0) {
+
+      playlist.add(this.currentTrack, playlist.get(this.currentTrack).makeClone());
+      playlist.remove(this.currentTrack + 1);
+
+      this.currentTrack--;
+
+    } else {
+
+      playlist.add(this.currentTrack - 1, playlist.get(this.currentTrack - 1).makeClone());
+      playlist.remove(this.currentTrack);
+      playlist.add(this.currentTrack, playlist.get(this.currentTrack).makeClone());
+      playlist.remove(this.currentTrack + 1);
+
+      // Sets current track to -2 so that ending and playing next track does not just replay the same song
+      this.currentTrack--;
+
+      if (!this.loop) {
+        this.currentTrack--;
+      }
+    }
+
     player.stopTrack();
   }
 
   public void stop() {
-    playlist.clear();
+    this.playlist = playlist.subList(this.currentTrack, this.currentTrack + 1);
 
     this.stopping = true;
 
     player.stopTrack();
 
-    this.stopping = false;
-    this.loop = false;
+    initialState();
   }
 
   public void toggleLoop() {

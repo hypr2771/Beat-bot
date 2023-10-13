@@ -28,10 +28,13 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands;
 
 public class Beat extends ListenerAdapter {
 
-  private static final List<CommandData> COMMANDS = new ArrayList<>(List.of(Commands.slash("stop", "Remove all tracks")
+  private static final List<CommandData> COMMANDS = new ArrayList<>(List.of(Commands.slash("previous", "Return to previous track")
                                                                                     .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
                                                                                     .setGuildOnly(true),
-                                                                            Commands.slash("skip", "Skip current track")
+                                                                            Commands.slash("stop", "Remove all tracks")
+                                                                                    .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
+                                                                                    .setGuildOnly(true),
+                                                                            Commands.slash("next", "Skip to next track")
                                                                                     .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
                                                                                     .setGuildOnly(true),
                                                                             Commands.slash("loop", "Loop current track")
@@ -83,14 +86,20 @@ public class Beat extends ListenerAdapter {
       var trackManager = guildTrackManagers.get(guild.getIdLong());
 
       switch (commandId) {
-        case "skip" -> {
-          trackManager.skip();
+        case "previous" -> {
+          trackManager.previous();
           event.deferReply(true)
                .flatMap(InteractionHook::deleteOriginal)
                .queue();
         }
         case "stop" -> {
           trackManager.stop();
+          event.deferReply(true)
+               .flatMap(InteractionHook::deleteOriginal)
+               .queue();
+        }
+        case "next" -> {
+          trackManager.next();
           event.deferReply(true)
                .flatMap(InteractionHook::deleteOriginal)
                .queue();
@@ -184,14 +193,20 @@ public class Beat extends ListenerAdapter {
     var trackManager = guildTrackManagers.get(guild.getIdLong());
 
     switch (event.getButton().getId()) {
-      case "skip" -> {
-        trackManager.skip();
+      case "previous" -> {
+        trackManager.previous();
         event.deferReply(true)
              .flatMap(InteractionHook::deleteOriginal)
              .queue();
       }
       case "stop" -> {
         trackManager.stop();
+        event.deferReply(true)
+             .flatMap(InteractionHook::deleteOriginal)
+             .queue();
+      }
+      case "next" -> {
+        trackManager.next();
         event.deferReply(true)
              .flatMap(InteractionHook::deleteOriginal)
              .queue();

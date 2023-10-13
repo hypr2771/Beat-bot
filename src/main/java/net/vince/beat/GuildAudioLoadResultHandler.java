@@ -32,18 +32,15 @@ public class GuildAudioLoadResultHandler implements AudioLoadResultHandler {
 
   @Override
   public void playlistLoaded(AudioPlaylist playlist) {
-    AudioTrack firstTrack = playlist.getSelectedTrack();
 
-    if (firstTrack == null) {
-      firstTrack = playlist.getTracks().get(0);
+    replyHook.editOriginal("✅ Adding to queue " + playlist.getName()).queue();
+
+    for (AudioTrack track : playlist.getTracks()) {
+      trackManager.queue(track,
+                         event.getMember().getVoiceState().getChannel(),
+                         replyHook,
+                         event.getChannel());
     }
-
-    replyHook.editOriginal("✅ Adding to queue " + firstTrack.getInfo().title + " (first track of playlist " + playlist.getName() + ")").queue();
-
-    trackManager.queue(playlist.getSelectedTrack(),
-                       event.getMember().getVoiceState().getChannel(),
-                       replyHook,
-                       event.getChannel());
   }
 
   @Override
