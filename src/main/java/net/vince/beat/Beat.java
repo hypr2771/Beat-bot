@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
@@ -25,32 +26,36 @@ import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
+import net.vince.beat.helper.KeyboardTranslation;
 
 public class Beat extends ListenerAdapter {
 
-  private static final List<CommandData> COMMANDS = new ArrayList<>(List.of(Commands.slash("previous", "Return to previous track")
-                                                                                    .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
-                                                                                    .setGuildOnly(true),
-                                                                            Commands.slash("stop", "Remove all tracks")
-                                                                                    .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
-                                                                                    .setGuildOnly(true),
-                                                                            Commands.slash("next", "Skip to next track")
-                                                                                    .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
-                                                                                    .setGuildOnly(true),
-                                                                            Commands.slash("loop", "Loop current track")
-                                                                                    .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
-                                                                                    .setGuildOnly(true),
-                                                                            Commands.slash("play", "Search and play a track")
-                                                                                    .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
-                                                                                    .setGuildOnly(true)
-                                                                                    .addOption(OptionType.STRING, "track", "Track to search for and play", true),
-                                                                            Commands.slash("ยสฟั", "Search and play a track")
-                                                                                    .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
-                                                                                    .setGuildOnly(true)
-                                                                                    .addOption(OptionType.STRING, "track", "Track to search for and play", true),
-                                                                            Commands.slash("clear", "Delete all bot messages")
-                                                                                    .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
-                                                                                    .setGuildOnly(true)));
+  private static final List<CommandData> COMMANDS = new ArrayList<>(Stream.of(Commands.slash("previous", "Return to previous track")
+                                                                                      .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
+                                                                                      .setGuildOnly(true),
+                                                                              Commands.slash("stop", "Remove all tracks")
+                                                                                      .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
+                                                                                      .setGuildOnly(true),
+                                                                              Commands.slash("next", "Skip to next track")
+                                                                                      .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
+                                                                                      .setGuildOnly(true),
+                                                                              Commands.slash("loop", "Loop current track")
+                                                                                      .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
+                                                                                      .setGuildOnly(true),
+                                                                              Commands.slash("play", "Search and play a track")
+                                                                                      .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
+                                                                                      .setGuildOnly(true)
+                                                                                      .addOption(OptionType.STRING, "track", "Track to search for and play", true),
+                                                                              Commands.slash("clear", "Delete all bot messages")
+                                                                                      .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
+                                                                                      .setGuildOnly(true))
+                                                                          .flatMap(slashCommandData -> Stream.of(slashCommandData,
+                                                                                                                 Commands.slash(KeyboardTranslation.toThai(slashCommandData.getName()),
+                                                                                                                                slashCommandData.getDescription())
+                                                                                                                         .setDefaultPermissions(slashCommandData.getDefaultPermissions())
+                                                                                                                         .setGuildOnly(slashCommandData.isGuildOnly())
+                                                                                                                         .addOptions(slashCommandData.getOptions())))
+                                                                          .toList());
 
   private final AudioPlayerManager      audioManager;
   private final Map<Long, TrackManager> guildTrackManagers;
@@ -89,97 +94,91 @@ public class Beat extends ListenerAdapter {
 
       var trackManager = guildTrackManagers.get(guild.getIdLong());
 
-      switch (commandId) {
-        case "previous" -> {
-          trackManager.previous();
-          event.deferReply(true)
-               .flatMap(InteractionHook::deleteOriginal)
-               .queue();
-        }
-        case "stop" -> {
-          trackManager.stop();
-          event.deferReply(true)
-               .flatMap(InteractionHook::deleteOriginal)
-               .queue();
-        }
-        case "next" -> {
-          trackManager.next();
-          event.deferReply(true)
-               .flatMap(InteractionHook::deleteOriginal)
-               .queue();
-        }
-        case "loop" -> {
-          trackManager.toggleLoop();
-          event.deferReply(true)
-               .flatMap(InteractionHook::deleteOriginal)
-               .queue();
-        }
-        case "play", "ยสฟั" -> {
-          var track = event.getOption("track").getAsString();
+      if (KeyboardTranslation.equals("previous", commandId)) {
+        trackManager.previous();
+        event.deferReply(true)
+             .flatMap(InteractionHook::deleteOriginal)
+             .queue();
+      } else if (KeyboardTranslation.equals("stop", commandId)) {
+        trackManager.stop();
+        event.deferReply(true)
+             .flatMap(InteractionHook::deleteOriginal)
+             .queue();
+      } else if (KeyboardTranslation.equals("next", commandId)) {
+        trackManager.next();
+        event.deferReply(true)
+             .flatMap(InteractionHook::deleteOriginal)
+             .queue();
+      } else if (KeyboardTranslation.equals("loop", commandId)) {
+        trackManager.toggleLoop();
+        event.deferReply(true)
+             .flatMap(InteractionHook::deleteOriginal)
+             .queue();
+      } else if (KeyboardTranslation.equals("play", commandId)) {
+        var track = event.getOption("track").getAsString();
 
-          event.deferReply(true)
-               .queue(hook -> {
+        event.deferReply(true)
+             .queue(hook -> {
 
-                 var isUri       = false;
-                 var actualTrack = track;
+               var isUri       = false;
+               var actualTrack = track;
 
+               try {
+                 new URL(actualTrack);
+                 isUri = true;
+               } catch (Exception ignored) {
+               }
+
+               if (!isUri) {
                  try {
-                   new URL(actualTrack);
-                   isUri = true;
-                 } catch (Exception ignored) {
-                 }
-
-                 if (!isUri) {
-                   try {
-                     actualTrack = HttpClient.newHttpClient().send(
-                                                 HttpRequest.newBuilder(URI.create("https://www.youtube.com/youtubei/v1/search"))
-                                                            .POST(BodyPublishers.ofString("""
-                                                                                              {
-                                                                                                "context": {
-                                                                                                  "client": {
-                                                                                                    "clientName": "WEB",
-                                                                                                    "clientVersion": "2.20230714.00.00"
-                                                                                                  },
-                                                                                                  "user": {
-                                                                                                    "lockedSafetyMode": false
-                                                                                                  },
-                                                                                                  "request": {
-                                                                                                    "useSsl": true,
-                                                                                                    "internalExperimentFlags": [],
-                                                                                                    "consistencyTokenJars": []
-                                                                                                  }
+                   actualTrack = HttpClient.newHttpClient().send(
+                                               HttpRequest.newBuilder(URI.create("https://www.youtube.com/youtubei/v1/search"))
+                                                          .POST(BodyPublishers.ofString("""
+                                                                                            {
+                                                                                              "context": {
+                                                                                                "client": {
+                                                                                                  "clientName": "WEB",
+                                                                                                  "clientVersion": "2.20230714.00.00"
                                                                                                 },
-                                                                                                "query": "{QUERY}",
-                                                                                              }
-                                                                                              """.replace("{QUERY}", track)))
-                                                            .build(),
-                                                 BodyHandlers.ofLines())
-                                             .body()
-                                             .filter(line -> line.contains("videoId"))
-                                             .map(videoIds -> videoIds.replaceAll(".+\"videoId\": \"(.+)\",", "$1"))
-                                             .findFirst()
-                                             .get();
-                   } catch (IOException e) {
-                     throw new RuntimeException(e);
-                   } catch (InterruptedException e) {
-                     throw new RuntimeException(e);
-                   }
-
-                   actualTrack = "https://www.youtube.com/watch?v=" + actualTrack;
+                                                                                                "user": {
+                                                                                                  "lockedSafetyMode": false
+                                                                                                },
+                                                                                                "request": {
+                                                                                                  "useSsl": true,
+                                                                                                  "internalExperimentFlags": [],
+                                                                                                  "consistencyTokenJars": []
+                                                                                                }
+                                                                                              },
+                                                                                              "query": "{QUERY}",
+                                                                                            }
+                                                                                            """.replace("{QUERY}", track)))
+                                                          .build(),
+                                               BodyHandlers.ofLines())
+                                           .body()
+                                           .filter(line -> line.contains("videoId"))
+                                           .map(videoIds -> videoIds.replaceAll(".+\"videoId\": \"(.+)\",", "$1"))
+                                           .findFirst()
+                                           .get();
+                 } catch (IOException e) {
+                   throw new RuntimeException(e);
+                 } catch (InterruptedException e) {
+                   throw new RuntimeException(e);
                  }
 
-                 audioManager.loadItem(actualTrack,
-                                       new GuildAudioLoadResultHandler(event, guild, trackManager, hook));
-               });
-        }
-        case "clear" -> {
-          event.deferReply(true)
-               .flatMap(hook -> event.getMessageChannel().getHistory().retrievePast(100))
-               .map(messages -> messages.stream().filter(message -> message.getAuthor().getId().equals("1129054171383996509")).toList())
-               .map(messages -> event.getGuildChannel().purgeMessages(messages))
-               .queue();
-        }
-        default -> event.reply("Unknown command " + commandId).queue();
+                 actualTrack = "https://www.youtube.com/watch?v=" + actualTrack;
+               }
+
+               audioManager.loadItem(actualTrack,
+                                     new GuildAudioLoadResultHandler(event, guild, trackManager, hook));
+             });
+      } else if (KeyboardTranslation.equals("clear", commandId)) {
+        event.deferReply(true)
+             .flatMap(hook -> event.getMessageChannel().getHistory().retrievePast(100))
+             .map(messages -> messages.stream().filter(message -> message.getAuthor().getId().equals("1129054171383996509")).toList())
+             .map(messages -> event.getGuildChannel().purgeMessages(messages))
+             .queue();
+      } else {
+        event.reply("Unknown command " + commandId).queue();
       }
     }
 
