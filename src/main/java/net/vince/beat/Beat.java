@@ -44,6 +44,10 @@ public class Beat extends ListenerAdapter {
                                                                                     .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
                                                                                     .setGuildOnly(true)
                                                                                     .addOption(OptionType.STRING, "track", "Track to search for and play", true),
+                                                                            Commands.slash("ยสฟั", "Search and play a track")
+                                                                                    .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
+                                                                                    .setGuildOnly(true)
+                                                                                    .addOption(OptionType.STRING, "track", "Track to search for and play", true),
                                                                             Commands.slash("clear", "Delete all bot messages")
                                                                                     .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
                                                                                     .setGuildOnly(true)));
@@ -110,7 +114,7 @@ public class Beat extends ListenerAdapter {
                .flatMap(InteractionHook::deleteOriginal)
                .queue();
         }
-        case "play" -> {
+        case "play", "ยสฟั" -> {
           var track = event.getOption("track").getAsString();
 
           event.deferReply(true)
