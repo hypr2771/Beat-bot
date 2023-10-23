@@ -7,6 +7,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import net.dv8tion.jda.api.entities.EmbedType;
@@ -227,5 +228,39 @@ public class TrackManager extends AudioEventAdapter {
     currentMessage.map(message -> message.editMessageComponents(getItemComponents())
                                          .flatMap(edited -> edited.editMessageEmbeds(getMessageEmbed())))
                   .ifPresent(messageRestAction -> messageRestAction.queue(message -> this.currentMessage = Optional.of(message)));
+  }
+
+  public void remove(List<Integer> indices) {
+
+    var filteredIndices = indices.stream()
+                                 .filter(index -> index > 0)
+                                 .filter(index -> index <= playlist.size())
+                                 .sorted(Comparator.reverseOrder())
+                                 .toList();
+
+    for (var index : filteredIndices) {
+
+      if (index < currentTrack) {
+        playlist.remove(index - 1);
+        currentTrack--;
+      }
+
+      if (index - 1 > currentTrack) {
+        playlist.remove(index - 1);
+      }
+    }
+
+    if (indices.contains(currentTrack + 1)) {
+      playlist.remove(currentTrack);
+      currentTrack--;
+      next();
+
+      // Calling display anew is not required since calling `next()` method already does a display through `stopTrack` which triggers `onTrackEnd`
+    } else {
+      currentMessage.map(message -> message.editMessageComponents(getItemComponents())
+                                           .flatMap(edited -> edited.editMessageEmbeds(getMessageEmbed())))
+                    .ifPresent(messageRestAction -> messageRestAction.queue(message -> this.currentMessage = Optional.of(message)));
+    }
+
   }
 }

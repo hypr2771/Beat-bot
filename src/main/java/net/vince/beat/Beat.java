@@ -11,10 +11,13 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -39,6 +42,10 @@ public class Beat extends ListenerAdapter {
                                                                               Commands.slash("next", "Skip to next track")
                                                                                       .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
                                                                                       .setGuildOnly(true),
+                                                                              Commands.slash("remove", "Remove tracks from playlist at provided indices")
+                                                                                      .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
+                                                                                      .setGuildOnly(true)
+                                                                                      .addOption(OptionType.STRING, "tracks", "Indices of tracks to remove from playlist", true),
                                                                               Commands.slash("loop", "Loop current track")
                                                                                       .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
                                                                                       .setGuildOnly(true),
@@ -106,6 +113,30 @@ public class Beat extends ListenerAdapter {
              .queue();
       } else if (KeyboardTranslation.equals("next", commandId)) {
         trackManager.next();
+        event.deferReply(true)
+             .flatMap(InteractionHook::deleteOriginal)
+             .queue();
+      } else if (KeyboardTranslation.equals("remove", commandId)) {
+
+        var indices = Arrays.stream(event.getOption("tracks")
+                                         .getAsString()
+                                         .split(","))
+                            .map(String::trim)
+                            .<Optional<Integer>>map(index -> {
+                              try {
+                                return Optional.of(Integer.parseInt(index));
+                              } catch (Exception e) {
+                                return Optional.empty();
+                              }
+                            })
+                            .filter(Optional::isPresent)
+                            .map(Optional::get)
+                            // Remove duplicates
+                            .collect(Collectors.toSet())
+                            .stream()
+                            .toList();
+
+        trackManager.remove(indices);
         event.deferReply(true)
              .flatMap(InteractionHook::deleteOriginal)
              .queue();
