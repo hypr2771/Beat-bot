@@ -238,21 +238,27 @@ public class TrackManager extends AudioEventAdapter {
                                  .sorted(Comparator.reverseOrder())
                                  .toList();
 
+    var shouldNext = false;
+
     for (var index : filteredIndices) {
 
-      if (index < currentTrack) {
+      if (index < currentTrack + 1) {
         playlist.remove(index - 1);
         currentTrack--;
       }
 
-      if (index - 1 > currentTrack) {
+      else if (index > currentTrack + 1) {
         playlist.remove(index - 1);
+      }
+
+      else if (index == currentTrack + 1) {
+        playlist.remove(currentTrack);
+        currentTrack--;
+        shouldNext = true;
       }
     }
 
-    if (indices.contains(currentTrack + 1)) {
-      playlist.remove(currentTrack);
-      currentTrack--;
+    if (shouldNext) {
       next();
 
       // Calling display anew is not required since calling `next()` method already does a display through `stopTrack` which triggers `onTrackEnd`
