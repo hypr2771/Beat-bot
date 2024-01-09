@@ -10,6 +10,8 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -20,6 +22,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.EmbedType;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -53,6 +57,17 @@ public class Beat extends ListenerAdapter {
                                                                                       .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
                                                                                       .setGuildOnly(true)
                                                                                       .addOption(OptionType.STRING, "track", "Track to search for and play", true),
+                                                                              Commands.slash("list", "List playlists available for further replay")
+                                                                                      .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
+                                                                                      .setGuildOnly(true),
+                                                                              Commands.slash("save", "Save this playlist for further replay")
+                                                                                      .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
+                                                                                      .setGuildOnly(true)
+                                                                                      .addOption(OptionType.STRING, "playlist", "Name of the playlist", true),
+                                                                              Commands.slash("load", "Load a saved playlist")
+                                                                                      .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
+                                                                                      .setGuildOnly(true)
+                                                                                      .addOption(OptionType.STRING, "playlist", "Name of the playlist", true),
                                                                               Commands.slash("clear", "Delete all bot messages")
                                                                                       .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
                                                                                       .setGuildOnly(true))
@@ -145,6 +160,114 @@ public class Beat extends ListenerAdapter {
         event.deferReply(true)
              .flatMap(InteractionHook::deleteOriginal)
              .queue();
+      } else if (KeyboardTranslation.equals("list", commandId)) {
+
+        try {
+
+          var files = Files.find(Path.of("."),
+                                 1,
+                                 (path, basicFileAttributes) -> path.getFileName().toString().startsWith(guild.getId()) &&
+                                                                path.getFileName().toString().endsWith(".playlist") &&
+                                                                basicFileAttributes.isRegularFile());
+
+          event.deferReply()
+               .flatMap(interactionHook -> interactionHook.editOriginalEmbeds(new MessageEmbed(null,
+                                                                                               "Available playlists",
+                                                                                               "· " + files.map(path -> {
+                                                                                                             try {
+                                                                                                               return "%s (%s tracks)".formatted(path.getFileName()
+                                                                                                                                                     .toString()
+                                                                                                                                                     .replace(guild.getId() + ".", "")
+                                                                                                                                                     .replace(".playlist", ""),
+                                                                                                                                                 Files.readAllLines(path).size());
+                                                                                                             } catch (IOException e) {
+                                                                                                               return "%s (unknown number of tracks)".formatted(path.getFileName()
+                                                                                                                                                                    .toString()
+                                                                                                                                                                    .replace(guild.getId() + ".", "")
+                                                                                                                                                                    .replace(".playlist", ""));
+                                                                                                             }
+                                                                                                           })
+                                                                                                           .collect(Collectors.joining("\n· ")),
+                                                                                               EmbedType.RICH,
+                                                                                               null,
+                                                                                               0x5dd200,
+                                                                                               null,
+                                                                                               null,
+                                                                                               null,
+                                                                                               null,
+                                                                                               null,
+                                                                                               null,
+                                                                                               null)))
+               .queue();
+
+        } catch (IOException e) {
+          event.deferReply(true)
+               .flatMap(interactionHook -> interactionHook.editOriginal("Playlists could not be fetched."))
+               .queue();
+          throw new RuntimeException(e);
+        }
+
+      } else if (KeyboardTranslation.equals("save", commandId)) {
+
+        if (trackManager.getPlaylist().isEmpty()) {
+          event.deferReply(true)
+               .flatMap(interactionHook -> interactionHook.editOriginal("No tracks are playing. Please start a track before saving a playlist."))
+               .queue();
+
+          return;
+        }
+
+        event.deferReply(true)
+             .flatMap(InteractionHook::deleteOriginal)
+             .queue();
+
+        try {
+          Files.writeString(Path.of("./%s.%s.playlist".formatted(guild.getId(), event.getOption("playlist").getAsString())),
+                            trackManager.getPlaylist()
+                                        .stream()
+                                        .map(audioTrack -> audioTrack.getInfo().uri)
+                                        .collect(Collectors.joining("\n")));
+        } catch (IOException e) {
+          event.deferReply(true)
+               .flatMap(interactionHook -> interactionHook.editOriginal("Playlist %s could not be saved.".formatted(event.getOption("playlist").getAsString())))
+               .queue();
+          throw new RuntimeException(e);
+        }
+
+      } else if (KeyboardTranslation.equals("load", commandId)) {
+
+        List<String> trackUrls;
+        try {
+          trackUrls = Files.readAllLines(Path.of("./%s.%s.playlist".formatted(guild.getId(), event.getOption("playlist").getAsString())));
+        } catch (IOException e) {
+          event.deferReply(true)
+               .flatMap(interactionHook -> interactionHook.editOriginal("Playlist %s does not exists.".formatted(event.getOption("playlist").getAsString())))
+               .queue();
+          throw new RuntimeException(e);
+        }
+
+        if (trackUrls.isEmpty()) {
+          event.deferReply(true)
+               .flatMap(interactionHook -> interactionHook.editOriginal("Playlist %s is empty.".formatted(event.getOption("playlist").getAsString())))
+               .queue();
+          return;
+        }
+
+        event.deferReply(true)
+             .queue(interactionHook ->
+                    {
+
+                      for (String trackUrl : trackUrls) {
+                        var loader = audioManager.loadItem(trackUrl,
+                                                           new GuildAudioLoadResultHandler(event, guild, trackManager, interactionHook));
+
+                        while (!loader.isCancelled() && !loader.isDone()) {
+                        }
+
+                      }
+
+                    });
+
       } else if (KeyboardTranslation.equals("play", commandId)) {
         var track = event.getOption("track").getAsString();
 

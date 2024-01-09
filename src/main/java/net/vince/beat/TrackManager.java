@@ -269,4 +269,8 @@ public class TrackManager extends AudioEventAdapter {
     }
 
   }
+
+  List<AudioTrack> getPlaylist() {
+    return playlist;
+  }
 }
