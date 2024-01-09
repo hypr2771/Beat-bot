@@ -32,9 +32,7 @@ import org.jetbrains.annotations.NotNull;
 public class Menace extends ListenerAdapter {
 
   private static final List<String> IPS = List.of("51.75.246.41:27015",
-                                                  "141.94.16.52:27015",
-                                                  "185.47.128.104:27015",
-                                                  "89.117.49.143:27015");
+                                                  "141.94.16.52:27015");
 
   private static final List<CommandData> COMMANDS = new ArrayList<>(List.of(Commands.slash("info", "Get info on CS server")
                                                                                     .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
@@ -71,7 +69,6 @@ public class Menace extends ListenerAdapter {
             ipPorts = switch (server) {
               case "1" -> IPS.subList(0, 1);
               case "2" -> IPS.subList(1, 2);
-              case "3" -> IPS.subList(2, 3);
               case "all" -> IPS;
               default -> {
                 noInfo = true;
@@ -80,7 +77,7 @@ public class Menace extends ListenerAdapter {
             };
 
             if (noInfo) {
-              event.reply("⛔️ There is only 3 known servers. Either type IP:PORT of server or 1, 2, 3 for Menace's servers.").queue();
+              event.reply("⛔️ There is only 2 known servers. Either type IP:PORT of server or 1, 2 for Menace's servers.").queue();
             }
           } else {
             ipPorts = List.of(server);
