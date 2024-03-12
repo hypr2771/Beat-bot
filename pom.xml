@@ -34,7 +34,7 @@
     <dependency>
       <groupId>net.dv8tion</groupId>
       <artifactId>JDA</artifactId>
-      <version>5.0.0-beta.12</version>
+      <version>5.0.0-beta.21</version>
     </dependency>
     <dependency>
       <groupId>dev.arbjerg</groupId>
@@ -60,20 +60,14 @@
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.5.1</version>
         <executions>
           <execution>
-            <id>copy-dependencies</id>
-            <phase>prepare-package</phase>
+            <phase>package</phase>
             <goals>
-              <goal>copy-dependencies</goal>
+              <goal>shade</goal>
             </goals>
-            <configuration>
-              <outputDirectory>${project.build.directory}/lib</outputDirectory>
-              <overWriteReleases>false</overWriteReleases>
-              <overWriteSnapshots>false</overWriteSnapshots>
-              <overWriteIfNewer>true</overWriteIfNewer>
-            </configuration>
           </execution>
         </executions>
       </plugin>
@@ -82,7 +76,7 @@
         <!-- Build an executable JAR -->
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
-        <version>3.1.0</version>
+        <version>3.3.0</version>
         <configuration>
           <archive>
             <manifest>
@@ -95,5 +89,4 @@
       </plugin>
     </plugins>
   </build>
-
 </project>
