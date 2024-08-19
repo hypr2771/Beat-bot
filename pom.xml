@@ -28,6 +28,10 @@
       <id>Snapshots</id>
       <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
     </repository>
+    <repository>
+      <id>Lavalink</id>
+      <url>https://maven.lavalink.dev/releases</url>
+    </repository>
   </repositories>
 
   <dependencies>
@@ -36,10 +40,17 @@
       <artifactId>JDA</artifactId>
       <version>5.0.0-beta.21</version>
     </dependency>
+
     <dependency>
-      <groupId>dev.arbjerg</groupId>
+      <groupId>com.github.devoxin</groupId>
       <artifactId>lavaplayer</artifactId>
-      <version>727959e9f621fc457b3a5adafcfffb55fdeaa538-SNAPSHOT</version>
+      <version>1.9.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>dev.lavalink.youtube</groupId>
+      <artifactId>common</artifactId>
+      <version>1.6.0</version>
     </dependency>
 
     <dependency>

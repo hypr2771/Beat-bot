@@ -3,6 +3,7 @@ package net.vince.beat;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
+import dev.lavalink.youtube.YoutubeAudioSourceManager;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
@@ -89,6 +90,9 @@ public class Beat extends ListenerAdapter {
   public Beat() {
 
     audioManager = new DefaultAudioPlayerManager();
+
+    YoutubeAudioSourceManager ytSourceManager = new dev.lavalink.youtube.YoutubeAudioSourceManager();
+    audioManager.registerSourceManager(ytSourceManager);
 
     AudioSourceManagers.registerRemoteSources(audioManager);
     AudioSourceManagers.registerLocalSource(audioManager);
