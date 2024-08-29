@@ -167,7 +167,39 @@ public class TrackManager extends AudioEventAdapter {
 
     var string = new StringBuilder();
 
-    for (int i = 0; i < this.playlist.size(); i++) {
+    var spread = 10;
+    var currentTrack = this.currentTrack;
+    var maxTracks = this.playlist.size();
+
+    var start = Math.max(0, currentTrack - spread);
+    var stop = Math.min(maxTracks, currentTrack + spread);
+
+    var overflowStart = start - (currentTrack - spread);
+    var overflowStop = stop - (currentTrack + spread);
+
+    var isOverflowingPrevious = start > 0;
+    var isOverflowingNext     = stop < maxTracks;
+
+    var mostPreviousToDisplay = Math.max(0, start + overflowStop);
+    var mostNextToDisplay = Math.min(maxTracks, stop + overflowStart);
+
+    if (isOverflowingPrevious) {
+      string.append("%s%s %s. %s - %s - %s%s%n".formatted(styleForIndex(0),
+                                                          0 == this.currentTrack ? "▸" : "·",
+                                                          1,
+                                                          this.playlist.get(0).getInfo().title,
+                                                          this.playlist.get(0).getInfo().author,
+                                                          humanReadableFormat(Duration.ofMillis(this.playlist.get(0).getInfo().length)),
+                                                          styleForIndex(0)));
+      if (start > 1) {
+        string.append("...\n");
+      }
+    }
+
+    // Display only first, 10 previous, current, 10 next and last tracks to avoid overflow
+    for (int i = mostPreviousToDisplay;
+         i < mostNextToDisplay;
+         i++) {
       string.append("%s%s %s. %s - %s - %s%s%n".formatted(styleForIndex(i),
                                                           i == this.currentTrack ? "▸" : "·",
                                                           i + 1,
@@ -175,6 +207,19 @@ public class TrackManager extends AudioEventAdapter {
                                                           this.playlist.get(i).getInfo().author,
                                                           humanReadableFormat(Duration.ofMillis(this.playlist.get(i).getInfo().length)),
                                                           styleForIndex(i)));
+    }
+
+    if (isOverflowingNext) {
+      if (stop < this.playlist.size() - 1) {
+        string.append("...\n");
+      }
+      string.append("%s%s %s. %s - %s - %s%s%n".formatted(styleForIndex(this.playlist.size() - 1),
+                                                          this.playlist.size() - 1 == this.currentTrack ? "▸" : "·",
+                                                          this.playlist.size(),
+                                                          this.playlist.get(this.playlist.size() - 1).getInfo().title,
+                                                          this.playlist.get(this.playlist.size() - 1).getInfo().author,
+                                                          humanReadableFormat(Duration.ofMillis(this.playlist.get(this.playlist.size() - 1).getInfo().length)),
+                                                          styleForIndex(this.playlist.size() - 1)));
     }
 
     return string.toString();
