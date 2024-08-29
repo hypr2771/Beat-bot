@@ -35,11 +35,17 @@ public class GuildAudioLoadResultHandler implements AudioLoadResultHandler {
 
     replyHook.editOriginal("✅ Adding to queue " + playlist.getName()).queue();
 
-    for (AudioTrack track : playlist.getTracks()) {
+    trackManager.queue(playlist.getTracks().stream().findFirst().get(),
+                       event.getMember().getVoiceState().getChannel(),
+                       replyHook,
+                       event.getChannel());
+
+    for (AudioTrack track : playlist.getTracks().subList(1, playlist.getTracks().size())) {
       trackManager.queue(track,
                          event.getMember().getVoiceState().getChannel(),
                          replyHook,
-                         event.getChannel());
+                         event.getChannel(),
+                         false);
     }
   }
 

@@ -47,6 +47,7 @@ public class TrackManager extends AudioEventAdapter {
   private int currentTrack = 0;
 
   private boolean loop     = false;
+  private boolean pause    = false;
   private boolean stopping = false;
 
   public TrackManager(AudioPlayerManager audioManager, Guild guild) {
@@ -66,11 +67,16 @@ public class TrackManager extends AudioEventAdapter {
     this.currentMessage = Optional.empty();
     this.playlist       = new ArrayList<>();
     this.stopping       = false;
+    this.pause          = false;
     this.loop           = false;
     this.currentTrack   = 0;
   }
 
   public void queue(AudioTrack track, AudioChannelUnion channel, InteractionHook replyHook, MessageChannelUnion eventChannel) {
+    queue(track, channel, replyHook, eventChannel, true);
+  }
+
+  public void queue(AudioTrack track, AudioChannelUnion channel, InteractionHook replyHook, MessageChannelUnion eventChannel, boolean editMessage) {
 
     guild.getAudioManager().openAudioConnection(channel);
 
@@ -81,16 +87,22 @@ public class TrackManager extends AudioEventAdapter {
       player.playTrack(playlist.get(currentTrack));
     }
 
-    replyHook.deleteOriginal()
-             .flatMap(ignored -> currentMessage.map(message -> message.editMessageComponents(getItemComponents())
-                                                                      .flatMap(edited -> edited.editMessageEmbeds(getMessageEmbed())))
-                                               .orElseGet(() -> eventChannel.sendMessageComponents(getItemComponents())
-                                                                            .flatMap(message -> message.editMessageEmbeds(getMessageEmbed()))))
-             .queue(message -> this.currentMessage = Optional.of(message));
+    if (editMessage) {
+      replyHook.deleteOriginal()
+               .flatMap(ignored -> currentMessage.map(message -> message.editMessageComponents(getItemComponents())
+                                                                        .flatMap(edited -> edited.editMessageEmbeds(getMessageEmbed())))
+                                                 .orElseGet(() -> eventChannel.sendMessageComponents(getItemComponents())
+                                                                              .flatMap(message -> message.editMessageEmbeds(getMessageEmbed()))))
+               .queue(message -> this.currentMessage = Optional.of(message));
+    }
   }
 
   @Override
   public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
+
+    if (this.pause) {
+      togglePause();
+    }
 
     if (this.loop &&
         !this.stopping &&
@@ -120,6 +132,11 @@ public class TrackManager extends AudioEventAdapter {
   @NotNull
   private ActionRow getItemComponents() {
     return ActionRow.of(Button.secondary("previous", Emoji.fromUnicode("⏮")),
+                        this.pause ?
+                        Button.success("pause",
+                                       Emoji.fromUnicode("▶")) :
+                        Button.secondary("pause",
+                                         Emoji.fromUnicode("⏸")),
                         Button.danger("stop", Emoji.fromUnicode("⏹")),
                         Button.secondary("next", Emoji.fromUnicode("⏭")),
                         this.loop ?
@@ -230,6 +247,16 @@ public class TrackManager extends AudioEventAdapter {
                   .ifPresent(messageRestAction -> messageRestAction.queue(message -> this.currentMessage = Optional.of(message)));
   }
 
+  public void togglePause() {
+    this.pause = !this.pause;
+
+    player.setPaused(this.pause);
+
+    currentMessage.map(message -> message.editMessageComponents(getItemComponents())
+                                         .flatMap(edited -> edited.editMessageEmbeds(getMessageEmbed())))
+                  .ifPresent(messageRestAction -> messageRestAction.queue(message -> this.currentMessage = Optional.of(message)));
+  }
+
   public void remove(List<Integer> indices) {
 
     var filteredIndices = indices.stream()
@@ -245,13 +272,9 @@ public class TrackManager extends AudioEventAdapter {
       if (index < currentTrack + 1) {
         playlist.remove(index - 1);
         currentTrack--;
-      }
-
-      else if (index > currentTrack + 1) {
+      } else if (index > currentTrack + 1) {
         playlist.remove(index - 1);
-      }
-
-      else if (index == currentTrack + 1) {
+      } else if (index == currentTrack + 1) {
         playlist.remove(currentTrack);
         currentTrack--;
         shouldNext = true;

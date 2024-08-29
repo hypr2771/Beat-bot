@@ -54,6 +54,9 @@ public class Beat extends ListenerAdapter {
                                                                               Commands.slash("loop", "Loop current track")
                                                                                       .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
                                                                                       .setGuildOnly(true),
+                                                                              Commands.slash("pause", "Pause or play back current track")
+                                                                                      .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
+                                                                                      .setGuildOnly(true),
                                                                               Commands.slash("play", "Search and play a track")
                                                                                       .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
                                                                                       .setGuildOnly(true)
@@ -161,6 +164,11 @@ public class Beat extends ListenerAdapter {
              .queue();
       } else if (KeyboardTranslation.equals("loop", commandId)) {
         trackManager.toggleLoop();
+        event.deferReply(true)
+             .flatMap(InteractionHook::deleteOriginal)
+             .queue();
+      } else if (KeyboardTranslation.equals("pause", commandId)) {
+        trackManager.togglePause();
         event.deferReply(true)
              .flatMap(InteractionHook::deleteOriginal)
              .queue();
@@ -374,6 +382,12 @@ public class Beat extends ListenerAdapter {
       }
       case "loop" -> {
         trackManager.toggleLoop();
+        event.deferReply(true)
+             .flatMap(InteractionHook::deleteOriginal)
+             .queue();
+      }
+      case "pause" -> {
+        trackManager.togglePause();
         event.deferReply(true)
              .flatMap(InteractionHook::deleteOriginal)
              .queue();
