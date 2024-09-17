@@ -60,7 +60,7 @@ public class Menace extends ListenerAdapter {
           var server = event.getOption("server").getAsString();
 
           var isNumber     = false;
-          var serverNumber = 0;
+          var serverNumber = 1;
           try {
             serverNumber = Integer.parseInt(server);
             isNumber     = true;
@@ -76,9 +76,9 @@ public class Menace extends ListenerAdapter {
             var noInfo = false;
 
             if (server.equals("all")) {
-              ipPorts = IPS.subList(serverNumber - 1, serverNumber);
-            } else if (isNumber) {
               ipPorts = IPS;
+            } else if (isNumber) {
+              ipPorts = IPS.subList(serverNumber - 1, serverNumber);
             } else {
               noInfo  = true;
               ipPorts = List.of();
