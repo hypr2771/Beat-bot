@@ -62,8 +62,8 @@ public class Menace extends ListenerAdapter {
           var isNumber     = false;
           var serverNumber = 0;
           try {
-            serverNumber = event.getOption("server").getAsInt();
-            isNumber = true;
+            serverNumber = Integer.parseInt(server);
+            isNumber     = true;
           } catch (Exception e) {
             // Do nothing, just checking whether we can parse server variable as a number
           }
@@ -75,9 +75,9 @@ public class Menace extends ListenerAdapter {
 
             var noInfo = false;
 
-            if (isNumber) {
+            if (server.equals("all")) {
               ipPorts = IPS.subList(serverNumber - 1, serverNumber);
-            } else if (server.equals("all")) {
+            } else if (isNumber) {
               ipPorts = IPS;
             } else {
               noInfo  = true;
