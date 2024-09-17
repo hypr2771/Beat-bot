@@ -93,7 +93,7 @@ public class Menace extends ListenerAdapter {
 
           event.deferReply().queue();
 
-          ipPorts.parallelStream()
+          ipPorts.stream()
                  .map(this::createMessage)
                  .collect(messagesToRestAction(event))
                  .queue();
