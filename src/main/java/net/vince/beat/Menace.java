@@ -190,7 +190,7 @@ public class Menace extends ListenerAdapter {
 
       var isFull = connectedPlayers == maxPlayers;
 
-      return new MessageEmbed("steam://connect/?%s:%s".formatted(ip, port),
+      return new MessageEmbed(null,
                               name,
                               """
                                   · 🗾 Map: %s
