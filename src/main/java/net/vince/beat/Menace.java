@@ -31,8 +31,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class Menace extends ListenerAdapter {
 
-  private static final List<String> IPS = List.of("51.75.246.41:27015",
-                                                  "141.94.16.52:27015");
+  private static final List<String> IPS = List.of("217.156.22.183:27015",
+                                                  "217.156.22.182:27015");
 
   private static final List<CommandData> COMMANDS = new ArrayList<>(List.of(Commands.slash("info", "Get info on CS server")
                                                                                     .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
@@ -59,6 +59,15 @@ public class Menace extends ListenerAdapter {
         case "info" -> {
           var server = event.getOption("server").getAsString();
 
+          var isNumber     = false;
+          var serverNumber = 0;
+          try {
+            serverNumber = event.getOption("server").getAsInt();
+            isNumber = true;
+          } catch (Exception e) {
+            // Do nothing, just checking whether we can parse server variable as a number
+          }
+
           var isIpPort = server.matches("(\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}):(\\d{1,5})");
           var ipPorts  = List.<String>of();
 
@@ -66,18 +75,17 @@ public class Menace extends ListenerAdapter {
 
             var noInfo = false;
 
-            ipPorts = switch (server) {
-              case "1" -> IPS.subList(0, 1);
-              case "2" -> IPS.subList(1, 2);
-              case "all" -> IPS;
-              default -> {
-                noInfo = true;
-                yield List.of();
-              }
-            };
+            if (isNumber) {
+              ipPorts = IPS.subList(serverNumber - 1, serverNumber);
+            } else if (server.equals("all")) {
+              ipPorts = IPS;
+            } else {
+              noInfo  = true;
+              ipPorts = List.of();
+            }
 
             if (noInfo) {
-              event.reply("⛔️ There is only 2 known servers. Either type IP:PORT of server or 1, 2 for Menace's servers.").queue();
+              event.reply("⛔️ There is only %s known servers. Either type IP:PORT of server, \"all\" or the server index you want to get information about.".formatted(IPS.size())).queue();
             }
           } else {
             ipPorts = List.of(server);
@@ -100,7 +108,7 @@ public class Menace extends ListenerAdapter {
   private Collector<MessageEmbed, Deque<RestAction<?>>, RestAction<?>> messagesToRestAction(final SlashCommandInteractionEvent event) {
     return new Collector<>() {
 
-      final InteractionHook hook = event.getInteraction().getHook();
+      final InteractionHook    hook   = event.getInteraction().getHook();
       final List<MessageEmbed> embeds = new ArrayList<>();
 
       @Override
