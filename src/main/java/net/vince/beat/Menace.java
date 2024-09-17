@@ -190,7 +190,7 @@ public class Menace extends ListenerAdapter {
 
       var isFull = connectedPlayers == maxPlayers;
 
-      return new MessageEmbed(null,
+      return new MessageEmbed("https://hypr1342.github.io/steamredirect/?ip=%s&port=%s".formatted(ip, port),
                               name,
                               """
                                   · 🗾 Map: %s
