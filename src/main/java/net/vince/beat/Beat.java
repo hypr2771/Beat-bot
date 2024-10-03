@@ -47,6 +47,10 @@ public class Beat extends ListenerAdapter {
                                                                               Commands.slash("next", "Skip to next track")
                                                                                       .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
                                                                                       .setGuildOnly(true),
+                                                                              Commands.slash("jump", "Jump to given track index in the playlist")
+                                                                                      .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
+                                                                                      .setGuildOnly(true)
+                                                                                      .addOption(OptionType.STRING, "index", "Index of the track to play (number next to the name of the track)", true),
                                                                               Commands.slash("remove", "Remove tracks from playlist at provided indices")
                                                                                       .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.EMPTY_PERMISSIONS))
                                                                                       .setGuildOnly(true)
@@ -135,6 +139,14 @@ public class Beat extends ListenerAdapter {
              .queue();
       } else if (KeyboardTranslation.equals("next", commandId)) {
         trackManager.next();
+        event.deferReply(true)
+             .flatMap(InteractionHook::deleteOriginal)
+             .queue();
+      } else if (KeyboardTranslation.equals("jump", commandId)) {
+
+        var index = event.getOption("index").getAsInt();
+
+        trackManager.jumpTo(index);
         event.deferReply(true)
              .flatMap(InteractionHook::deleteOriginal)
              .queue();

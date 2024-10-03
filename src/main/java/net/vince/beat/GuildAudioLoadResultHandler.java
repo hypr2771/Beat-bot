@@ -47,6 +47,8 @@ public class GuildAudioLoadResultHandler implements AudioLoadResultHandler {
                          event.getChannel(),
                          false);
     }
+
+    trackManager.jumpTo(playlist.getTracks().indexOf(playlist.getSelectedTrack()) + 1);
   }
 
   @Override

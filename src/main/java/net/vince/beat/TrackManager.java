@@ -116,6 +116,8 @@ public class TrackManager extends AudioEventAdapter {
     }
 
     if (!playlist.isEmpty()) {
+      playlist.add(this.currentTrack, playlist.get(this.currentTrack).makeClone());
+      playlist.remove(currentTrack + 1);
       player.playTrack(playlist.get(currentTrack));
 
       currentMessage.map(message -> message.editMessageComponents(getItemComponents())
@@ -167,21 +169,21 @@ public class TrackManager extends AudioEventAdapter {
 
     var string = new StringBuilder();
 
-    var spread = 10;
+    var spread       = 10;
     var currentTrack = this.currentTrack;
-    var maxTracks = this.playlist.size();
+    var maxTracks    = this.playlist.size();
 
     var start = Math.max(0, currentTrack - spread);
-    var stop = Math.min(maxTracks, currentTrack + spread);
+    var stop  = Math.min(maxTracks, currentTrack + spread);
 
     var overflowStart = start - (currentTrack - spread);
-    var overflowStop = stop - (currentTrack + spread);
+    var overflowStop  = stop - (currentTrack + spread);
 
     var isOverflowingPrevious = start > 0;
     var isOverflowingNext     = stop < maxTracks;
 
     var mostPreviousToDisplay = Math.max(0, start + overflowStop);
-    var mostNextToDisplay = Math.min(maxTracks, stop + overflowStart);
+    var mostNextToDisplay     = Math.min(maxTracks, stop + overflowStart);
 
     if (isOverflowingPrevious) {
       string.append("%s%s %s. %s - %s - %s%s%n".formatted(styleForIndex(0),
@@ -245,6 +247,25 @@ public class TrackManager extends AudioEventAdapter {
 
   public void next() {
     player.stopTrack();
+  }
+
+  void jumpTo(int index) {
+
+    if (index < 1) {
+      index = 1;
+    }
+
+    if (index > playlist.size()) {
+      index = playlist.size();
+    }
+
+    // Convert to actual list index (starts from 0)
+    index--;
+    // Plan for the "next" button which adds 1
+    index--;
+
+    this.currentTrack = index;
+    next();
   }
 
   public void previous() {
