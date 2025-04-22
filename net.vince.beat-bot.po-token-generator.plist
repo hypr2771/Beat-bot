@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>BeatBot</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>docker</string>
+    <string>run</string>
+    <string>-p 8980:8080</string>
+    <string>quay.io/invidious/youtube-trusted-session-generator:webserver</string>
+  </array>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>KeepAlive</key>
+  <false/>
+
+  <key>StandardOutPath</key>
+  <string>/Users/vincentcastelluci/Workspace/Perso/Discord/Beat/beat-log-po-token-generator.log</string>
+
+  <key>StandardErrorPath</key>
+  <string>/Users/vincentcastelluci/Workspace/Perso/Discord/Beat/beat-log-po-token-generator.log</string>
+</dict>
+</plist>

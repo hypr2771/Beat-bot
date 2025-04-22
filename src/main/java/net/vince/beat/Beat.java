@@ -4,12 +4,9 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import dev.lavalink.youtube.YoutubeAudioSourceManager;
-import dev.lavalink.youtube.clients.Android;
-import dev.lavalink.youtube.clients.AndroidMusic;
-import dev.lavalink.youtube.clients.Ios;
-import dev.lavalink.youtube.clients.Music;
-import dev.lavalink.youtube.clients.TvHtml5Embedded;
-import dev.lavalink.youtube.clients.WebEmbedded;
+import dev.lavalink.youtube.clients.AndroidWithThumbnail;
+import dev.lavalink.youtube.clients.MusicWithThumbnail;
+import dev.lavalink.youtube.clients.WebWithThumbnail;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
@@ -26,6 +23,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import net.dv8tion.jda.api.Permission;
@@ -41,6 +40,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.vince.beat.helper.KeyboardTranslation;
+import net.vince.beat.helper.PoTokenRefresher;
 
 public class Beat extends ListenerAdapter {
 
@@ -104,8 +104,13 @@ public class Beat extends ListenerAdapter {
 
     audioManager = new DefaultAudioPlayerManager();
 
-    YoutubeAudioSourceManager ytSourceManager = new dev.lavalink.youtube.YoutubeAudioSourceManager(new Ios(), new Music(), new WebEmbedded(), new TvHtml5Embedded(), new AndroidMusic(), new Android());
-    audioManager.registerSourceManager(ytSourceManager);
+    new ScheduledThreadPoolExecutor(2).scheduleAtFixedRate(PoTokenRefresher::refresh,
+                                                           0,
+                                                           1,
+                                                           TimeUnit.HOURS);
+
+    YoutubeAudioSourceManager youtube = new YoutubeAudioSourceManager(/*allowSearch:*/ true, new MusicWithThumbnail(), new WebWithThumbnail(), new AndroidWithThumbnail());
+    audioManager.registerSourceManager(youtube);
 
     AudioSourceManagers.registerRemoteSources(audioManager);
     AudioSourceManagers.registerLocalSource(audioManager);
