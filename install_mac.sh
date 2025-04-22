@@ -9,6 +9,10 @@ cd ..
 sed -i '' "s/beat-1.0-SNAPSHOT.jar/${name}/g" net.vince.beat-bot.plist
 cp net.vince.beat-bot.plist ~/Library/LaunchAgents/net.vince.beat-bot.plist
 cp net.vince.beat-bot.po-token-generator.plist ~/Library/LaunchAgents/net.vince.beat-bot.po-token-generator.plist
+
+chmod 644 ~/Library/LaunchAgents/net.vince.beat-bot.plist
+chmod 644 ~/Library/LaunchAgents/net.vince.beat-bot.po-token-generator.plist
+
 launchctl unload ~/Library/LaunchAgents/net.vince.beat-bot.plist
 launchctl unload ~/Library/LaunchAgents/net.vince.beat-bot.po-token-generator.plist
 launchctl load ~/Library/LaunchAgents/net.vince.beat-bot.plist

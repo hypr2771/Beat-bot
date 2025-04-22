@@ -53,13 +53,6 @@
       <version>1.12.0</version>
     </dependency>
 
-    <!-- Request POToken using Python-->
-    <dependency>
-      <groupId>org.python</groupId>
-      <artifactId>jython-slim</artifactId>
-      <version>2.7.3b1</version>
-    </dependency>
-
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-api</artifactId>
