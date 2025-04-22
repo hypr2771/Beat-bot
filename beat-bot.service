@@ -5,7 +5,7 @@ After = network-online.target
 [Service]
 ExecStart=/home/debian/.sdkman/candidates/java/current/bin/java -jar /home/debian/Workspace/Beat-bot/source/Beat-bot/target/beat-1.0-SNAPSHOT.jar
 WorkingDirectory=/home/debian/Workspace/Beat-bot
-User=pi
+User=debian
 Restart=always
 StandardOutput=inherit
 StandardError=inherit

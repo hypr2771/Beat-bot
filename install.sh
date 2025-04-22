@@ -10,6 +10,6 @@ sudo cp beat-bot.service /lib/systemd/system/
 sudo cp beat-bot-po-token-generator.service /lib/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable beat-bot.service
-sudo systemctl enable beat-bot-po-token-generator.service
 sudo systemctl restart beat-bot.service
+sudo systemctl enable beat-bot-po-token-generator.service
 sudo systemctl restart beat-bot-po-token-generator.service
