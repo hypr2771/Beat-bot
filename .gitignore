@@ -2,6 +2,8 @@
 beat.properties
 dependency-reduced-pom.xml
 *.playlist
+*.jar
+*.log
 
 ## Java
 target/
