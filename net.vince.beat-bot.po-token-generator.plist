@@ -8,10 +8,7 @@
 
   <key>ProgramArguments</key>
   <array>
-    <string>docker</string>
-    <string>run</string>
-    <string>-p 8980:8080</string>
-    <string>quay.io/invidious/youtube-trusted-session-generator:webserver</string>
+    <string>docker run -p 8980:8080 quay.io/invidious/youtube-trusted-session-generator:webserver</string>
   </array>
 
   <key>RunAtLoad</key>
