@@ -4,9 +4,12 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import dev.lavalink.youtube.YoutubeAudioSourceManager;
+import dev.lavalink.youtube.clients.AndroidMusicWithThumbnail;
 import dev.lavalink.youtube.clients.AndroidWithThumbnail;
+import dev.lavalink.youtube.clients.IosWithThumbnail;
 import dev.lavalink.youtube.clients.MusicWithThumbnail;
-import dev.lavalink.youtube.clients.WebWithThumbnail;
+import dev.lavalink.youtube.clients.TvHtml5EmbeddedWithThumbnail;
+import dev.lavalink.youtube.clients.WebEmbeddedWithThumbnail;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
@@ -109,7 +112,7 @@ public class Beat extends ListenerAdapter {
                                                            1,
                                                            TimeUnit.HOURS);
 
-    YoutubeAudioSourceManager youtube = new YoutubeAudioSourceManager(/*allowSearch:*/ true, new MusicWithThumbnail(), new WebWithThumbnail(), new AndroidWithThumbnail());
+    YoutubeAudioSourceManager youtube = new YoutubeAudioSourceManager(/*allowSearch:*/ true, new IosWithThumbnail(), new MusicWithThumbnail(), new WebEmbeddedWithThumbnail(), new TvHtml5EmbeddedWithThumbnail(), new AndroidMusicWithThumbnail(), new AndroidWithThumbnail());
     audioManager.registerSourceManager(youtube);
 
     AudioSourceManagers.registerRemoteSources(audioManager);
