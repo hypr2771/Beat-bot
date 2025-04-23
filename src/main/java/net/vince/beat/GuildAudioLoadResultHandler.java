@@ -7,8 +7,12 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.InteractionHook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GuildAudioLoadResultHandler implements AudioLoadResultHandler {
+
+  private static final Logger log = LoggerFactory.getLogger(GuildAudioLoadResultHandler.class);
 
   private final SlashCommandInteractionEvent event;
   private final Guild                        guild;
@@ -53,11 +57,13 @@ public class GuildAudioLoadResultHandler implements AudioLoadResultHandler {
 
   @Override
   public void noMatches() {
+    log.info("⚠️ Nothing found for {}", event.getOption("track").getAsString());
     replyHook.editOriginal("⚠️ Nothing found for " + event.getOption("track").getAsString()).queue();
   }
 
   @Override
   public void loadFailed(FriendlyException exception) {
+    log.info("⛔️ Could not play: {}", exception.getMessage(), exception);
     replyHook.editOriginal("⛔️ Could not play: " + exception.getMessage()).queue();
   }
 }
