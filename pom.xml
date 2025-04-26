@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>net.vince</groupId>
@@ -52,7 +52,7 @@
       <artifactId>v2</artifactId>
       <version>1fc7c08544f1370e3976ccc02314d7ed4d1800ee-SNAPSHOT</version>
       <scope>system</scope>
-      <systemPath>${project.basedir}/src/main/resources/youtube-v2-2a666dc964c1b5ac97e395e452dc9f66414d0101-SNAPSHOT-all.jar</systemPath>
+      <systemPath>${project.basedir}/src/main/resources/lib/youtube-v2-2a666dc964c1b5ac97e395e452dc9f66414d0101-SNAPSHOT-all.jar</systemPath>
     </dependency>
 
     <dependency>
@@ -90,6 +90,26 @@
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>3.0.0</version>
+        <executions>
+          <execution>
+            <id>unpack-system-jar</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target>
+                <unzip src="${project.basedir}/src/main/resources/lib/youtube-v2-2a666dc964c1b5ac97e395e452dc9f66414d0101-SNAPSHOT-all.jar"
+                       dest="${project.build.outputDirectory}"/>
+              </target>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
         <version>3.5.1</version>
         <executions>
@@ -98,24 +118,15 @@
             <goals>
               <goal>shade</goal>
             </goals>
+            <configuration>
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <mainClass>net.vince.Main</mainClass>
+                </transformer>
+              </transformers>
+            </configuration>
           </execution>
         </executions>
-      </plugin>
-
-      <plugin>
-        <!-- Build an executable JAR -->
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>3.3.0</version>
-        <configuration>
-          <archive>
-            <manifest>
-              <addClasspath>true</addClasspath>
-              <classpathPrefix>lib/</classpathPrefix>
-              <mainClass>net.vince.Main</mainClass>
-            </manifest>
-          </archive>
-        </configuration>
       </plugin>
     </plugins>
   </build>
