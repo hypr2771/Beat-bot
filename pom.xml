@@ -50,7 +50,9 @@
     <dependency>
       <groupId>dev.lavalink.youtube</groupId>
       <artifactId>v2</artifactId>
-      <version>1.12.0</version>
+      <version>1fc7c08544f1370e3976ccc02314d7ed4d1800ee-SNAPSHOT</version>
+      <scope>system</scope>
+      <systemPath>${project.basedir}/src/main/resources/youtube-v2-2a666dc964c1b5ac97e395e452dc9f66414d0101-SNAPSHOT-all.jar</systemPath>
     </dependency>
 
     <dependency>

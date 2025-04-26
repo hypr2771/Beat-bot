@@ -2,7 +2,7 @@
 beat.properties
 dependency-reduced-pom.xml
 *.playlist
-*.jar
+#*.jar
 *.log
 
 ## Java
